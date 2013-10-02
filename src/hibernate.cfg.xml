@@ -27,9 +27,12 @@
 
     <!-- Drop and re-create the database schema on startup -->
     <property name="hbm2ddl.auto">update</property>
-
     <mapping class="com.fameden.bean.FamedenRequest"/>
     <mapping class="com.fameden.bean.FamedenRequestDetail"/>
+    <mapping class="com.fameden.bean.FamedenUser"/>
+    <mapping class="com.fameden.bean.FamedenUserIdsMap"/>
+    <mapping class="com.fameden.bean.FamedenUserKeys"/>
+    <mapping class="com.fameden.bean.FamedenUserInfo"/>
   </session-factory>
 </hibernate-configuration>
 
