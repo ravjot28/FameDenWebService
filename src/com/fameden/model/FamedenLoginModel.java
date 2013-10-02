@@ -1,20 +1,13 @@
-package com.fameden.bean;
+package com.fameden.model;
 
 import java.util.Date;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
+public class FamedenLoginModel {
 
-@Entity
-@Table(name = "FAMEDEN_REQUEST_TBL")
-public class FamedenRequest {
-	@Id
-	@GeneratedValue(generator = "requestID_seq", strategy = GenerationType.SEQUENCE)
-    @SequenceGenerator(allocationSize = 1, initialValue = 1, sequenceName = "requestID_seq", name = "requestID_seq")
+	private String userID;
+	private String password;
+	private String loginMode;
+	
 	private int requestID;
 	private String requestType;
 	private Date requestDate;
@@ -24,6 +17,24 @@ public class FamedenRequest {
 	private String customerIP;
 	
 	
+	public String getUserID() {
+		return userID;
+	}
+	public void setUserID(String userID) {
+		this.userID = userID;
+	}
+	public String getPassword() {
+		return password;
+	}
+	public void setPassword(String password) {
+		this.password = password;
+	}
+	public String getLoginMode() {
+		return loginMode;
+	}
+	public void setLoginMode(String loginMode) {
+		this.loginMode = loginMode;
+	}
 	public int getRequestID() {
 		return requestID;
 	}
@@ -66,7 +77,5 @@ public class FamedenRequest {
 	public void setCustomerIP(String customerIP) {
 		this.customerIP = customerIP;
 	}
-
-	
 	
 }

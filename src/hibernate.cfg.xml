@@ -29,6 +29,7 @@
     <property name="hbm2ddl.auto">update</property>
 
     <mapping class="com.fameden.bean.FamedenRequest"/>
+    <mapping class="com.fameden.bean.FamedenRequestDetail"/>
   </session-factory>
 </hibernate-configuration>
 

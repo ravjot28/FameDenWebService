@@ -17,14 +17,24 @@ public class FamedenRequestDetail {
 	@GeneratedValue(generator = "requestID_seq", strategy = GenerationType.SEQUENCE)
 	@SequenceGenerator(allocationSize = 1, initialValue = 1, sequenceName = "requestID_seq", name = "requestID_seq")
 	private int requestDetailID;
-	@OneToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name = "requestID")
-	private int requestID;
 	private String itemName;
 	private String itemID;
 	private String itemType;
-	private String customerCost;
+	private double customerCost;
 	private String paymentMode;
+	@OneToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "requestID")
+	private FamedenRequest famedenRequest;
+	
+	
+
+	public FamedenRequest getFamedenRequest() {
+		return famedenRequest;
+	}
+
+	public void setFamedenRequest(FamedenRequest famedenRequest) {
+		this.famedenRequest = famedenRequest;
+	}
 
 	public int getRequestDetailID() {
 		return requestDetailID;
@@ -32,14 +42,6 @@ public class FamedenRequestDetail {
 
 	public void setRequestDetailID(int requestDetailID) {
 		this.requestDetailID = requestDetailID;
-	}
-
-	public int getRequestID() {
-		return requestID;
-	}
-
-	public void setRequestID(int requestID) {
-		this.requestID = requestID;
 	}
 
 	public String getItemName() {
@@ -54,8 +56,8 @@ public class FamedenRequestDetail {
 		return itemID;
 	}
 
-	public void setItemID(String itemID) {
-		this.itemID = itemID;
+	public void setItemID(String i) {
+		this.itemID = i;
 	}
 
 	public String getItemType() {
@@ -66,11 +68,11 @@ public class FamedenRequestDetail {
 		this.itemType = itemType;
 	}
 
-	public String getCustomerCost() {
+	public double getCustomerCost() {
 		return customerCost;
 	}
 
-	public void setCustomerCost(String customerCost) {
+	public void setCustomerCost(double customerCost) {
 		this.customerCost = customerCost;
 	}
 
