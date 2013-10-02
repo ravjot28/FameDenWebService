@@ -1,6 +1,7 @@
 package com.fameden.webservice.contracts;
 
 import javax.jws.WebMethod;
+import javax.jws.WebParam;
 import javax.jws.WebResult;
 import javax.jws.WebService;
 import javax.xml.ws.RequestWrapper;
@@ -21,11 +22,9 @@ public interface ILoginWS {
      *     returns com.fameden.model.FamedenUserProfileModel
      */
     
-    @WebMethod(operationName = "LoginAndGetUserProfile", action = "http://www.fameden.com/Login")
-    @WebResult(name = "UserProfileResult", targetNamespace = "http://www.fameden.com/")
-    @RequestWrapper(localName = "LoginAndGetUserProfile", targetNamespace = "http://www.fameden.com/")
-    @ResponseWrapper(localName = "UserProfileResponse", targetNamespace =  "http://www.fameden.com/")
-    public FamedenUserProfileModel login(FamedenLoginModel loginModel);
+    @WebMethod(operationName = "LoginAndGetUserProfile")
+    @WebResult(name = "LoginResponse")
+    public FamedenUserProfileModel login(@WebParam(name="LoginRequest")FamedenLoginModel loginModel);
 	
 	
 }

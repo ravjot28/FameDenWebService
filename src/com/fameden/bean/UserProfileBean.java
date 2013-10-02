@@ -1,6 +1,6 @@
-package com.fameden.model;
+package com.fameden.bean;
 
-public class FamedenUserProfileModel extends GenericResponse{
+public class UserProfileBean {
 
 	private String userName;
 
@@ -11,6 +11,5 @@ public class FamedenUserProfileModel extends GenericResponse{
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
-	
 	
 }

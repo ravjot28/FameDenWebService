@@ -1,8 +1,10 @@
-package com.fameden.model;
+package com.fameden.dto;
 
-public class FamedenUserProfileModel extends GenericResponse{
+public class UserProfileDTO extends GenericResponseDTO {
 
 	private String userName;
+
+	private GenericResponseDTO genericResponseDTO;
 
 	public String getUserName() {
 		return userName;
@@ -11,6 +13,5 @@ public class FamedenUserProfileModel extends GenericResponse{
 	public void setUserName(String userName) {
 		this.userName = userName;
 	}
-	
-	
+
 }
