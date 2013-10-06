@@ -7,6 +7,7 @@ public class RegistrationDTO extends GenericDTO {
 	private String registrationType;
 	private String publicToken;
 	private String privateToken;
+	private String alternateEmailAddress;
 
 	public String getFullName() {
 		return fullName;
@@ -46,6 +47,14 @@ public class RegistrationDTO extends GenericDTO {
 
 	public void setPrivateToken(String privateToken) {
 		this.privateToken = privateToken;
+	}
+
+	public String getAlternateEmailAddress() {
+		return alternateEmailAddress;
+	}
+
+	public void setAlternateEmailAddress(String alternateEmailAddress) {
+		this.alternateEmailAddress = alternateEmailAddress;
 	}
 
 }

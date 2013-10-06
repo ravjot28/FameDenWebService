@@ -7,6 +7,7 @@ public class FamedenRegistrationRequest extends GenericRequest {
 	private String privateToken;
 	private String publicToken;
 	private String registrationType;
+	private String alternateEmailAddress;
 
 	public String getFullName() {
 		return fullName;
@@ -46,6 +47,14 @@ public class FamedenRegistrationRequest extends GenericRequest {
 
 	public void setRegistrationType(String registrationType) {
 		this.registrationType = registrationType;
+	}
+
+	public String getAlternateEmailAddress() {
+		return alternateEmailAddress;
+	}
+
+	public void setAlternateEmailAddress(String alternateEmailAddress) {
+		this.alternateEmailAddress = alternateEmailAddress;
 	}
 
 }

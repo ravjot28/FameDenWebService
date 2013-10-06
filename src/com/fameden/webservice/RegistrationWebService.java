@@ -11,20 +11,27 @@ import com.fameden.webservice.contracts.ICommon;
 import com.fameden.webservice.contracts.IRegistrationWS;
 
 @WebService(endpointInterface = "com.fameden.webservice.contracts.IRegistrationWS", serviceName = "registrationService", portName = "RegistrationPort")
-public class RegistrationWebService implements IRegistrationWS,ICommon {
+public class RegistrationWebService implements IRegistrationWS, ICommon {
 
 	@Override
 	public FamedenRegistrationResponse registerUser(
 			FamedenRegistrationRequest request) {
 
-		FamedenRegistrationResponse frr = null;
-		
-		RegistrationDTO dto = (RegistrationDTO) populateDTO(request);
-		
 		RegistrationService service = new RegistrationService();
+		FamedenRegistrationResponse response = null;
 
-		service.processRequest(dto);
-		return frr;
+		RegistrationDTO dto = (RegistrationDTO) populateDTO(request);
+		if (dto != null) {
+			response = service.processRequest(dto);
+		} else {
+			dto = new RegistrationDTO();
+			dto.setStatus(GlobalConstants.FAILURE);
+			dto.setMessage(GlobalConstants.GENERIC_ERROR_MESSAGE);
+			response = (FamedenRegistrationResponse) service
+					.populateResponse(dto);
+		}
+
+		return response;
 
 	}
 
@@ -32,18 +39,21 @@ public class RegistrationWebService implements IRegistrationWS,ICommon {
 	public Object populateDTO(Object obj) {
 		RegistrationDTO dto = null;
 		FamedenRegistrationRequest request = (FamedenRegistrationRequest) obj;
-		dto = new RegistrationDTO();
-		dto.setCustomerIP(request.getCustomerIP());
-		dto.setEmailAddress(request.getEmailAddress());
-		dto.setFullName(request.getFullName());
-		dto.setMessage(null);
-		dto.setPassword(request.getPassword());
-		dto.setPrivateToken(request.getPrivateToken());
-		dto.setPublicToken(request.getPublicToken());
-		dto.setRegistrationType(request.getRegistrationType());
-		dto.setRequestType(request.getRequestType());
-		dto.setStatus(GlobalConstants.IN_PROCESS);
-		dto.setTransactionId(null);
+		if (request != null) {
+			dto = new RegistrationDTO();
+			dto.setCustomerIP(request.getCustomerIP());
+			dto.setEmailAddress(request.getEmailAddress());
+			dto.setFullName(request.getFullName());
+			dto.setMessage(null);
+			dto.setPassword(request.getPassword());
+			dto.setPrivateToken(request.getPrivateToken());
+			dto.setPublicToken(request.getPublicToken());
+			dto.setRegistrationType(request.getRegistrationType());
+			dto.setRequestType(request.getRequestType());
+			dto.setStatus(GlobalConstants.IN_PROCESS);
+			dto.setTransactionId(null);
+			dto.setAlternateEmailAddress(request.getAlternateEmailAddress());
+		}
 		return dto;
 	}
 

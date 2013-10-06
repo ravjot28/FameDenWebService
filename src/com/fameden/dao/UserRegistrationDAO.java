@@ -1,9 +1,13 @@
 package com.fameden.dao;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.sql.Date;
 import java.util.Calendar;
 
 import org.hibernate.Session;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fameden.bean.FamedenUser;
 import com.fameden.bean.FamedenUserIdsMap;
@@ -12,97 +16,113 @@ import com.fameden.bean.FamedenUserKeys;
 import com.fameden.bean.FamedenUserMappingCompositePK;
 import com.fameden.dto.RegistrationDTO;
 import com.fameden.util.DatabaseConfig;
+import com.fameden.util.SaltTextEncryption;
 
-public class UserRegistrationDAO implements ICommonDAO {
+public class UserRegistrationDAO {
 
-	public static void main(String[] args) {
-		RegistrationDTO dto = new RegistrationDTO();
-		dto.setCustomerIP("192.168.1.1");
-		dto.setEmailAddress("ravjot28@gmail.com");
-		dto.setFullName("Ravjot Singh");
-		dto.setPassword("ravjot123");
-		dto.setPrivateToken("ravjottoken1");
-		dto.setPublicToken("ravjottoken2");
-		dto.setRegistrationType("facebook");
-		new UserRegistrationDAO().registerUser(dto);
+	Logger logger = LoggerFactory.getLogger(UserRegistrationDAO.class);
+
+
+	public String registerUser(RegistrationDTO dto) throws Exception {
+		String verificationCode = null;
+		Session session = null;
+		FamedenUserInfo famdenUserInfo = null;
+		try {
+			famdenUserInfo = populateFamedenUserInfo(dto);
+		} catch (Exception e) {
+			throw e;
+		}
+		try {
+			session = DatabaseConfig.getSessionFactory().openSession();
+
+			session.beginTransaction();
+			FamedenUser famdenUser = famdenUserInfo.getFamedenUser();
+			FamedenUserKeys famedenUserKeys = populateFamedenUserKeys(dto);
+
+			FamedenUserIdsMap famedenUserIdsMap = null;
+			FamedenUserMappingCompositePK famedenUserMappingCompositePK = new FamedenUserMappingCompositePK();
+			famedenUserIdsMap = new FamedenUserIdsMap();
+
+			famedenUserMappingCompositePK.setFamedenUser(famdenUser);
+			famedenUserMappingCompositePK.setFamedenUserKeys(famedenUserKeys);
+
+			famedenUserIdsMap
+					.setFamedenUserMappingCompositePK(famedenUserMappingCompositePK);
+
+			session.save(famdenUser);
+			session.save(famdenUserInfo);
+			session.save(famedenUserKeys);
+			session.save(famedenUserIdsMap);
+
+			session.getTransaction().commit();
+
+			verificationCode = famdenUser.getVerificationCode();
+		} catch (Exception e) {
+			if (session != null) {
+				session.getTransaction().rollback();
+			}
+			logger.error(e.getMessage(), e);
+			throw e;
+		}
+
+		return verificationCode;
 	}
 
-	public boolean registerUser(RegistrationDTO dto) {
-		boolean result = false;
-		Session session = DatabaseConfig.getSessionFactory()
-				.getCurrentSession();
-
-		session.beginTransaction();
-
-		FamedenUserInfo famdenUserInfo = populateFamedenUserInfo(dto);
-		FamedenUser famdenUser = famdenUserInfo.getFamedenUser();
-		FamedenUserKeys famedenUserKeys = populateFamedenUserKeys(dto);
-
-		FamedenUserIdsMap famedenUserIdsMap = null;
-		FamedenUserMappingCompositePK famedenUserMappingCompositePK = new FamedenUserMappingCompositePK();
-		famedenUserIdsMap = new FamedenUserIdsMap();
-
-		famedenUserMappingCompositePK.setFamedenUser(famdenUser);
-		famedenUserMappingCompositePK.setFamedenUserKeys(famedenUserKeys);
-
-		famedenUserIdsMap
-				.setFamedenUserMappingCompositePK(famedenUserMappingCompositePK);
-		
-		session.save(famdenUser);
-		session.save(famdenUserInfo);
-		session.save(famedenUserKeys);
-		session.save(famedenUserIdsMap);
-
-		session.getTransaction().commit();
-
-		return result;
-	}
-
-	@Override
-	public Object populateDAOFromDTO(Object dto) {
-		RegistrationDTO registrationDTO = (RegistrationDTO) dto;
-		FamedenUserIdsMap famedenUserIdsMap = null;
-		FamedenUserMappingCompositePK famedenUserMappingCompositePK = new FamedenUserMappingCompositePK();
-		famedenUserIdsMap = new FamedenUserIdsMap();
-		famedenUserMappingCompositePK.setFamedenUser(populateFamedenUserInfo(
-				registrationDTO).getFamedenUser());
-		famedenUserMappingCompositePK
-				.setFamedenUserKeys(populateFamedenUserKeys(registrationDTO));
-
-		famedenUserIdsMap
-				.setFamedenUserMappingCompositePK(famedenUserMappingCompositePK);
-		return famedenUserIdsMap;
-	}
-
-	public FamedenUser populateFamedenUser(RegistrationDTO dto) {
+	public FamedenUser populateFamedenUser(RegistrationDTO dto)
+			throws Exception {
 		FamedenUser famedenUser = null;
-		famedenUser = new FamedenUser();
-		famedenUser.setActive('Y');
-		famedenUser.setIsVerified('N');
-		famedenUser.setCreationDate(new Date(Calendar.getInstance()
-				.getTimeInMillis()));
-		famedenUser.setRegistrationMode(dto.getRegistrationType());
-		famedenUser.setEmailAddress(dto.getEmailAddress());
+		if (dto != null) {
+			famedenUser = new FamedenUser();
+			famedenUser.setActive('N');
+			famedenUser.setIsVerified('N');
+			famedenUser.setCreationDate(new Date(Calendar.getInstance()
+					.getTimeInMillis()));
+			famedenUser.setRegistrationMode(dto.getRegistrationType());
+			famedenUser.setEmailAddress(dto.getEmailAddress());
+
+			SaltTextEncryption encrypt = new SaltTextEncryption();
+			String verificationCode = null;
+			try {
+				verificationCode = encrypt.createHash(dto.getEmailAddress());
+				famedenUser.setVerificationCode(verificationCode);
+			} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+				logger.error(e.getMessage(), e);
+				throw e;
+			} catch (Exception e) {
+				logger.error(e.getMessage(), e);
+				throw e;
+			}
+		}
 		return famedenUser;
 	}
 
 	public FamedenUserKeys populateFamedenUserKeys(RegistrationDTO dto) {
 		FamedenUserKeys famedenUserDetail = null;
-		famedenUserDetail = new FamedenUserKeys();
+		if (dto != null) {
+			famedenUserDetail = new FamedenUserKeys();
 
-		famedenUserDetail.setPassword(dto.getPassword());
-		famedenUserDetail.setPrivateToken(dto.getPrivateToken());
-		famedenUserDetail.setPubicToken(dto.getPublicToken());
-
+			famedenUserDetail.setPassword(dto.getPassword());
+			famedenUserDetail.setPrivateToken(dto.getPrivateToken());
+			famedenUserDetail.setPubicToken(dto.getPublicToken());
+		}
 		return famedenUserDetail;
 
 	}
 
-	public FamedenUserInfo populateFamedenUserInfo(RegistrationDTO dto) {
+	public FamedenUserInfo populateFamedenUserInfo(RegistrationDTO dto)
+			throws Exception {
 		FamedenUserInfo famedenUserInfo = null;
-		famedenUserInfo = new FamedenUserInfo();
-		famedenUserInfo.setFullName(dto.getFullName());
-		famedenUserInfo.setFamedenUser(populateFamedenUser(dto));
+		if (dto != null) {
+			famedenUserInfo = new FamedenUserInfo();
+			famedenUserInfo.setFullName(dto.getFullName());
+			famedenUserInfo.setAlternateEmailAddress(dto
+					.getAlternateEmailAddress());
+			try {
+				famedenUserInfo.setFamedenUser(populateFamedenUser(dto));
+			} catch (Exception e) {
+				throw e;
+			}
+		}
 		return famedenUserInfo;
 	}
 

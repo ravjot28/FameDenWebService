@@ -1,6 +1,6 @@
 package com.fameden.dto;
 
-public class LoginDTO extends GenericDTO{
+public class LoginRequestDTO extends GenericDTO{
 	
 	private String userID ;
 	

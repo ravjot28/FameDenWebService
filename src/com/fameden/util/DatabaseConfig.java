@@ -6,21 +6,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class DatabaseConfig {
-	
+
 	static Logger logger = LoggerFactory.getLogger(DatabaseConfig.class);
 
+	private static SessionFactory sessionFactory;
+
 	public static SessionFactory getSessionFactory() {
-		SessionFactory sessionFactory;
-		try {
-			// Create the SessionFactory from hibernate.cfg.xml
-			sessionFactory = new Configuration().configure()
-					.buildSessionFactory();
-		} catch (Throwable ex) {
-			// Make sure you log the exception, as it might be swallowed
-			logger.info("Exception in HibernateUtil");
-			logger.error(null, ex);
-			throw new ExceptionInInitializerError(ex);
+
+		if (sessionFactory == null) {
+			try {
+				sessionFactory = new Configuration().configure()
+						.buildSessionFactory();
+			} catch (Throwable ex) {
+				logger.info("Exception in HibernateUtil");
+				logger.error(null, ex);
+				throw new ExceptionInInitializerError(ex);
+			}
 		}
+
 		return sessionFactory;
 	}
 }

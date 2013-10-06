@@ -1,8 +1,8 @@
 package com.fameden.util;
 
-import com.sun.net.ssl.internal.ssl.Provider;
 import java.security.Security;
 import java.util.Properties;
+
 import javax.activation.DataHandler;
 import javax.activation.FileDataSource;
 import javax.mail.Authenticator;
@@ -17,11 +17,13 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 
+import com.sun.net.ssl.internal.ssl.Provider;
+
 /**
  * 
  * @author Rav
  */
-public class SendMail {
+public class SendMail implements Runnable {
 
 	private String SMTP_HOST_NAME;
 	private String SMTP_PORT;
@@ -34,12 +36,13 @@ public class SendMail {
 	private String pwd = null;
 	private String[] too;
 	private String[] attachements;
-	static int count = 0;
-	
+	private Thread th;
+
 	public static void main(String[] args) {
-		String[] to = {"arora.puneet777@gmail.com"};
-		String[] at = {"D:\\SAQ_Answers.txt"};
-		SendMail sm = new SendMail("fameden.info@gmail.com","apple$3401","Test","Test Message",at,to);
+		String[] to = { "ravjot28@gmail.com" };
+		String[] at = { "D:\\SAQ_Answers.txt" };
+		SendMail sm = new SendMail("fameden.info@gmail.com", "apple$3401",
+				"Test", "Test Message", at, to);
 		sm.send();
 	}
 
@@ -71,17 +74,24 @@ public class SendMail {
 		this.too = to;
 		this.attachements = attachments;
 	}
+	
+	public SendMail(String sub, String msg,
+			String[] attachments, String[] to) {
+		this.SMTP_HOST_NAME = "smtp.gmail.com";
+		this.SMTP_PORT = "465";
+		this.debug = "true";
+		this.auth = "true";
+		this.MsgTxt = msg;
+		this.Subject = sub;
+		this.From = "fameden.info@gmail.com";
+		this.pwd =  "apple$3401";
+		this.too = to;
+		this.attachements = attachments;
+	}
 
-	public boolean send() {
-		Security.addProvider(new Provider());
-		try {
-			sendSSLMessage(this.too, this.Subject, this.MsgTxt, this.From,
-					this.pwd, this.attachements);
-			return true;
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return false;
+	public void send() {
+		th = new Thread(this);
+		th.start();
 	}
 
 	public void sendSSLMessage(String[] recipients, String subject,
@@ -133,11 +143,23 @@ public class SendMail {
 			for (int j = 0; j < attachement.length; j++) {
 				mp.addBodyPart(attachment[j]);
 			}
-			
+
 		}
-		
+
 		msg.setContent(mp);
 
 		Transport.send(msg);
+	}
+
+	@Override
+	public void run() {
+		Security.addProvider(new Provider());
+		try {
+			sendSSLMessage(this.too, this.Subject, this.MsgTxt, this.From,
+					this.pwd, this.attachements);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 }

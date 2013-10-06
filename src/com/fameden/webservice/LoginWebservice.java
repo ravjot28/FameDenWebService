@@ -3,9 +3,9 @@ package com.fameden.webservice;
 import javax.jws.WebService;
 
 import com.fameden.constants.GlobalConstants;
-import com.fameden.dto.LoginDTO;
-import com.fameden.model.FamedenLoginModel;
-import com.fameden.model.FamedenUserProfileModel;
+import com.fameden.dto.LoginRequestDTO;
+import com.fameden.model.FamedenLoginRequest;
+import com.fameden.model.FamedenLoginResponse;
 import com.fameden.service.LoginService;
 import com.fameden.webservice.contracts.ICommon;
 import com.fameden.webservice.contracts.ILoginWS;
@@ -14,46 +14,51 @@ import com.fameden.webservice.contracts.ILoginWS;
 public class LoginWebservice implements ILoginWS, ICommon {
 
 	@Override
-	public FamedenUserProfileModel login(FamedenLoginModel loginModel) {
+	public FamedenLoginResponse login(FamedenLoginRequest loginRequestModel) {
 
-		FamedenUserProfileModel userProfile = null;
+		FamedenLoginResponse userProfile = null;
 
 
-			LoginDTO loginDTO = (LoginDTO) this.populateDTO(loginModel);
-
-			
+			LoginRequestDTO loginDTO = (LoginRequestDTO) this.populateDTO(loginRequestModel);			
 			LoginService loginService = new LoginService();
 			
-			//userProfile = (FamedenUserProfileModel)loginService.processRequest(loginDTO);
+			userProfile = (FamedenLoginResponse)loginService.processRequest(loginDTO);
 			
 			//TODO: Set user profile model object.
 
-		
 		return userProfile;
 	}
 
 	@Override
 	public Object populateDTO(Object obj) {
 
-		LoginDTO loginDTO = new LoginDTO();
-		FamedenLoginModel loginModel = (FamedenLoginModel) obj;
+		LoginRequestDTO loginDTO = new LoginRequestDTO();
+		FamedenLoginRequest loginModel = (FamedenLoginRequest) obj;
 		
 		loginDTO.setCustomerIP(loginModel.getCustomerIP());
 		loginDTO.setEmailAddress(loginModel.getEmailAddress());
-		//loginDTO.setEndUser(loginModel.getEndUser());
 		loginDTO.setMessage(null);
 		loginDTO.setRequestType(loginModel.getRequestType());
-		//loginDTO.setUserID(loginModel.getEndUser());
 		loginDTO.setPassword(loginModel.getPassword());
 		loginDTO.setLoginMode(loginModel.getLoginMode());
 		loginDTO.setStatus(GlobalConstants.IN_PROCESS);
 		loginDTO.setTransactionId(null);
-		
-		
-		
-		
-		
+
 		return loginDTO;
 	}
+	
+	public static void main(String[] args) {
+		FamedenLoginRequest login = new FamedenLoginRequest();
+
+		login.setEmailAddress("arora.punet777@gmail.com");
+		login.setPassword("123");
+		login.setCustomerIP("10.0.0.10");
+		login.setLoginMode("Twitter");
+
+			LoginWebservice webService = new LoginWebservice();
+			webService.login(login);
+		
+	}
+	
 
 }

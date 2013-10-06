@@ -1,24 +1,25 @@
 package com.fameden.util;
 
-import java.security.SecureRandom;
-import javax.crypto.spec.PBEKeySpec;
-import javax.crypto.SecretKeyFactory;
 import java.math.BigInteger;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
+
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
 
 public class SaltTextEncryption {
 
 	public static final String pbkdf2Algo = "PBKDF2WithHmacSHA1";
-	public static final int saltByteSize = 124;
-	public static final int hashByteSize = 124;
+	public static final int saltByteSize = 16;
+	public static final int hashByteSize = 16;
 	public static final int pbkdf2Iterations = 1000;
 
 	public static final int iterationIndex = 0;
 	public static final int saltIndex = 1;
 	public static final int pbkdf2Index = 2;
 
-	public static String createHash(String password)
+	public String createHash(String password)
 			throws NoSuchAlgorithmException, InvalidKeySpecException {
 		return createHash(password.toCharArray());
 	}
@@ -32,7 +33,7 @@ public class SaltTextEncryption {
 		return pbkdf2Iterations + ":" + toHex(salt) + ":" + toHex(hash);
 	}
 
-	public static boolean validatePassword(String password, String correctHash)
+	public boolean validatePassword(String password, String correctHash)
 			throws NoSuchAlgorithmException, InvalidKeySpecException {
 		return validatePassword(password.toCharArray(), correctHash);
 	}
@@ -83,10 +84,10 @@ public class SaltTextEncryption {
 	public static void main(String[] args) {
 
 		try {
-			String hash = SaltTextEncryption.createHash("apple!3401");
+			String hash = new SaltTextEncryption().createHash("apple!3401");
 			System.out.println(hash);
 
-			System.out.println(SaltTextEncryption.validatePassword("apple!3401",
+			System.out.println(new SaltTextEncryption().validatePassword("apple!3401",
 					hash));
 		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
 			e.printStackTrace();

@@ -2,6 +2,8 @@ package com.fameden.dao;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.sql.Date;
+import java.util.Calendar;
 import java.util.List;
 
 import org.hibernate.Criteria;
@@ -9,132 +11,171 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
+import com.fameden.bean.FamedenRequest;
+import com.fameden.bean.FamedenRequestDetail;
 import com.fameden.bean.FamedenUser;
 import com.fameden.bean.FamedenUserIdsMap;
 import com.fameden.bean.FamedenUserInfo;
 import com.fameden.bean.FamedenUserKeys;
 import com.fameden.bean.FamedenUserMappingCompositePK;
-import com.fameden.dto.LoginDTO;
-import com.fameden.dto.UserProfileDTO;
+import com.fameden.constants.GlobalConstants;
+import com.fameden.constants.LoginConstants;
+import com.fameden.dto.LoginRequestDTO;
+import com.fameden.dto.LoginResponseDTO;
 import com.fameden.util.DatabaseConfig;
 import com.fameden.util.SaltTextEncryption;
 
 public class LoginDAO {
 
 	public static void main(String[] args) {
-		LoginDTO login = new LoginDTO();
-		
-		login.setEmailAddress("ravjot28@gmail.com");
-		
+		LoginRequestDTO login = new LoginRequestDTO();
+
+		login.setEmailAddress("arora.puneet777@gmail.com");
+		login.setPassword("1234");
+
 		try {
-			authenticateAndFetchUserProfile(login);
+			LoginDAO dao = new LoginDAO();
+			dao.authenticateAndFetchUserProfile(login);
 		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}
-	
-	public static Object authenticateAndFetchUserProfile(
-			LoginDTO loginDTO) throws NoSuchAlgorithmException, InvalidKeySpecException {
 
-		boolean isAuthenticationSuccessful = false;
-		//FamedenUserInfo userProfileBean = new FamedenUserInfo();
-		
-		CommonUserOperation emailPresenceCheck = new  CommonUserOperation();
-		
+	public Object authenticateAndFetchUserProfile(LoginRequestDTO loginDTO)
+			throws NoSuchAlgorithmException, InvalidKeySpecException {
+
+		LoginResponseDTO loginResponse = new LoginResponseDTO();
+		// boolean isAuthenticationSuccessful = false;
+		int requestID = -1;
+		FamedenRequestDetail requestDetail = null;
 		FamedenUser user = new FamedenUser();
-		FamedenUserIdsMap userIdMap= new FamedenUserIdsMap();
+		// FamedenUserIdsMap userIdMap = new FamedenUserIdsMap();
 		FamedenUserKeys userCredentials = new FamedenUserKeys();
 		FamedenUserMappingCompositePK userIdCompositePK = new FamedenUserMappingCompositePK();
-		
-		Session session = DatabaseConfig.getSessionFactory()
-				.getCurrentSession();
-		
-		session.beginTransaction();
-		
+		CommonUserOperation emailPresenceCheck = new CommonUserOperation();
+
+		requestDetail = this.populateRequestBeanFromDTO(loginDTO);
+		CommonRequestOperationDAO loginRequest = new CommonRequestOperationDAO();
+
+		try {
+			requestID = loginRequest.insertRequest(requestDetail);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		user = emailPresenceCheck.searchByEmailId(loginDTO.getEmailAddress());
-		//System.out.println(user.getRegistrationMode());
-		if (user==null)  {
-			
-			
-			
-		}else {
+		
+		if (user == null) {
+			try {
+				
+				loginRequest.updateRequestStatus(requestID,
+						GlobalConstants.FAILURE);
+			} catch (Exception e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			loginResponse.setStatus(GlobalConstants.FAILURE);
+			loginResponse.setMessage(LoginConstants.userNameNotFound
+					+ loginDTO.getEmailAddress());
+
+		} else {
+			Session session = DatabaseConfig.getSessionFactory().openSession();
+
+			session.beginTransaction();
+
 			Criteria crit = session.createCriteria(FamedenUserIdsMap.class);
-			//crit.createAlias("famedenUser", "user");
-			//System.out.println(user.getFamdenExternalUserId());
 			Criterion externalIdRestriction = Restrictions
-					.eq("famedenUserMappingCompositePK.famedenUser.famdenExternalUserId", user.getFamdenExternalUserId());
+					.eq("famedenUserMappingCompositePK.famedenUser.famdenExternalUserId",
+							user.getFamdenExternalUserId());
 			crit.add(externalIdRestriction);
 			List<FamedenUserIdsMap> famedenUserIdMappingList = ((List<FamedenUserIdsMap>) crit
 					.list());
 
 			if (famedenUserIdMappingList != null
 					&& famedenUserIdMappingList.size() > 0) {
-				userIdCompositePK = famedenUserIdMappingList.get(0).getFamedenUserMappingCompositePK();
-				
-				System.out.println(userIdCompositePK.getFamedenUserKeys().getFamdenInternalUserId());
-				userCredentials = (FamedenUserKeys)session.get(FamedenUserKeys.class, userIdCompositePK.getFamedenUserKeys().getFamdenInternalUserId());
-				System.out.println(userCredentials.getPassword());
-			}else{
-				System.out.println("empty list");
+				userIdCompositePK = famedenUserIdMappingList.get(0)
+						.getFamedenUserMappingCompositePK();
+
+				System.out.println(userIdCompositePK.getFamedenUserKeys()
+						.getFamdenInternalUserId());
+				userCredentials = (FamedenUserKeys) session
+						.get(FamedenUserKeys.class, userIdCompositePK
+								.getFamedenUserKeys().getFamdenInternalUserId());
+
+				if (loginDTO.getPassword().compareTo(
+						userCredentials.getPassword()) == 0) {
+
+					FamedenUserInfo userInfo = new FamedenUserInfo();
+					userInfo = (FamedenUserInfo) session.get(
+							FamedenUserInfo.class,
+							user.getFamdenExternalUserId());
+
+					try {
+						loginRequest.updateRequestStatus(requestID,
+								GlobalConstants.SUCCESS);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+
+				} else {
+					try {
+						loginRequest.updateRequestStatus(requestID,
+								GlobalConstants.FAILURE);
+					} catch (Exception e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					loginResponse.setStatus(GlobalConstants.FAILURE);
+					loginResponse.setMessage(LoginConstants.passwordIncorrect
+							+ loginDTO.getEmailAddress());
+				}
+
 			}
-			
-			
-
-
-			/*userIdMap = (FamedenUserIdsMap) session.get(FamedenUserIdsMap.class, 10);
-			FamedenUserMappingCompositePK compositePK = userIdMap.getFamedenUserMappingCompositePK();
-			userCredentials = (FamedenUserKeys)session.get(FamedenUserKeys.class, compositePK.getFamedenUserKeys().getFamdenInternalUserId());
-			*/
-			//System.out.println(userCredentials.getPassword());
-			
+			session.getTransaction().commit();
+			session.close();
 		}
-		
-		
-		//isAuthenticationSuccessful = this.authenticateUser(loginDTO,Session session);
-
-		if (isAuthenticationSuccessful) {
-			
-			//this.populateUserProfileDTO();
-
-			//userProfileBean = this.fetchUserProfile(loginBean.getUserID());
-
-		} else {
-
-		}
-		
-		session.getTransaction().commit();
 
 		return null;
 
 	}
 
+	private FamedenRequestDetail populateRequestBeanFromDTO(Object obj) {
+		LoginRequestDTO loginDTO = (LoginRequestDTO) obj;
+		FamedenRequestDetail requestDetail = new FamedenRequestDetail();
+		FamedenRequest request = new FamedenRequest();
 
+		request.setCustomerIP(loginDTO.getCustomerIP());
+		request.setRequestDate(new Date(Calendar.getInstance()
+				.getTimeInMillis()));
+		request.setFamedenUserId(0);
+		request.setRequestStatus(GlobalConstants.IN_PROCESS);
+		request.setRequestType(GlobalConstants.Login_REQUEST);
+		request.setRequestUpdateDate(new Date(Calendar.getInstance()
+				.getTimeInMillis()));
+		request.setRequestUser(loginDTO.getEmailAddress());
 
-	private UserProfileDTO populateUserProfileDTO(FamedenUserInfo userProfileBean) {
+		requestDetail.setFamedenRequest(request);
 
-		UserProfileDTO userProfileDTO = new UserProfileDTO();
-		//userProfileDTO.setUserName(userProfileBean.getUserName());
-
-		return null;
+		return requestDetail;
 	}
-	
-	private boolean authenticateUser(LoginDTO loginDTO) throws NoSuchAlgorithmException, InvalidKeySpecException{
-		
-		boolean isLoginSuccessful = false ;
-		String actualPassword ="ravjot28";
-		
-		//TODO: Get Actual Password from db
-		
+
+	private boolean authenticateUser(LoginRequestDTO loginDTO)
+			throws NoSuchAlgorithmException, InvalidKeySpecException {
+
+		boolean isLoginSuccessful = false;
+		String actualPassword = "ravjot28";
+
+		// TODO: Get Actual Password from db
+
 		SaltTextEncryption ste = new SaltTextEncryption();
-		
+
 		String hash = ste.createHash(loginDTO.getPassword());
-		
+
 		isLoginSuccessful = ste.validatePassword(actualPassword, hash);
 
 		return isLoginSuccessful;
 	}
-
-	
 
 }

@@ -7,49 +7,42 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.fameden.bean.FamedenRequestDetail;
 import com.fameden.bean.FamedenUser;
 import com.fameden.util.DatabaseConfig;
 
-public class CommonUserOperation  implements Serializable, ICommonDAO {
-	
+public class CommonUserOperation implements Serializable {
+
 	private static final long serialVersionUID = -8046989953394977117L;
 
-	public  FamedenUser searchByEmailId(String emailId){
-		FamedenUser user =null;
-		
-		Session session = DatabaseConfig.getSessionFactory()
-				.getCurrentSession();
+	Logger logger = LoggerFactory.getLogger(CommonUserOperation.class);
 
-		session.beginTransaction();
+	public FamedenUser searchByEmailId(String emailId) {
+		FamedenUser user = null;
+		try {
+			Session session = DatabaseConfig.getSessionFactory().openSession();
 
-		Criteria crit = session.createCriteria(FamedenUser.class);
-		Criterion emailAddressRestriction = Restrictions
-				.eq("emailAddress", emailId);
-		crit.add(emailAddressRestriction);
-		List<FamedenUser> famedenUserList = ((List<FamedenUser>) crit
-				.list());
+			session.beginTransaction();
 
-		if (famedenUserList != null
-				&& famedenUserList.size() > 0) {
-			user = famedenUserList.get(0);
+			Criteria crit = session.createCriteria(FamedenUser.class);
+			Criterion emailAddressRestriction = Restrictions.eq("emailAddress",
+					emailId);
+			crit.add(emailAddressRestriction);
+			List<FamedenUser> famedenUserList = ((List<FamedenUser>) crit
+					.list());
+
+			if (famedenUserList != null && famedenUserList.size() > 0) {
+				user = famedenUserList.get(0);
+			}
+
+			session.getTransaction().commit();
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			throw e;
 		}
-
-		session.getTransaction().commit();
-		
 		return user;
-	}
-	
-	public static void main(String[] args) {
-		CommonUserOperation co = new CommonUserOperation();
-		co.searchByEmailId("ravjot28@gmail.com");
-	}
-
-	@Override
-	public Object populateDAOFromDTO(Object dto) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 }

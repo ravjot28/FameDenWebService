@@ -22,6 +22,7 @@ public class FamedenUserInfo implements Serializable {
 	private FamedenUser famedenUser;
 	private String fullName;
 	private String mobileNo;
+	private String alternateEmailAddress;
 
 	public FamedenUser getFamedenUser() {
 		return famedenUser;
@@ -45,6 +46,14 @@ public class FamedenUserInfo implements Serializable {
 
 	public void setMobileNo(String mobileNo) {
 		this.mobileNo = mobileNo;
+	}
+
+	public String getAlternateEmailAddress() {
+		return alternateEmailAddress;
+	}
+
+	public void setAlternateEmailAddress(String alternateEmailAddress) {
+		this.alternateEmailAddress = alternateEmailAddress;
 	}
 
 }

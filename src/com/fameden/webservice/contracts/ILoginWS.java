@@ -4,11 +4,9 @@ import javax.jws.WebMethod;
 import javax.jws.WebParam;
 import javax.jws.WebResult;
 import javax.jws.WebService;
-import javax.xml.ws.RequestWrapper;
-import javax.xml.ws.ResponseWrapper;
 
-import com.fameden.model.FamedenLoginModel;
-import com.fameden.model.FamedenUserProfileModel;
+import com.fameden.model.FamedenLoginRequest;
+import com.fameden.model.FamedenLoginResponse;
 
 
 @WebService(name = "LoginServiceContract", targetNamespace = "http://www.fameden.com/")
@@ -24,7 +22,7 @@ public interface ILoginWS {
     
     @WebMethod(operationName = "LoginAndGetUserProfile")
     @WebResult(name = "LoginResponse")
-    public FamedenUserProfileModel login(@WebParam(name="LoginRequest")FamedenLoginModel loginModel);
+    public FamedenLoginResponse login(@WebParam(name="LoginRequest")FamedenLoginRequest loginRequest);
 	
 	
 }
