@@ -40,10 +40,10 @@ public class LoginWebservice implements ILoginWS, ICommon {
 		
 		loginDTO.setCustomerIP(loginModel.getCustomerIP());
 		loginDTO.setEmailAddress(loginModel.getEmailAddress());
-		loginDTO.setEndUser(loginModel.getEndUser());
+		//loginDTO.setEndUser(loginModel.getEndUser());
 		loginDTO.setMessage(null);
 		loginDTO.setRequestType(loginModel.getRequestType());
-		loginDTO.setUserID(loginModel.getEndUser());
+		//loginDTO.setUserID(loginModel.getEndUser());
 		loginDTO.setPassword(loginModel.getPassword());
 		loginDTO.setLoginMode(loginModel.getLoginMode());
 		loginDTO.setStatus(GlobalConstants.IN_PROCESS);

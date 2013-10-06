@@ -37,8 +37,9 @@ public class SendMail {
 	static int count = 0;
 	
 	public static void main(String[] args) {
-		String[] to = {"arora.puneet777@gmail.com","pankaj-sharma@live.in"};
-		SendMail sm = new SendMail("fameden.info@gmail.com","apple$3401","Test","Test Message",null,to);
+		String[] to = {"arora.puneet777@gmail.com"};
+		String[] at = {"D:\\SAQ_Answers.txt"};
+		SendMail sm = new SendMail("fameden.info@gmail.com","apple$3401","Test","Test Message",at,to);
 		sm.send();
 	}
 

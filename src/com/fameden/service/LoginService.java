@@ -27,7 +27,7 @@ public class LoginService {
 		LoginDTO loginDTO = (LoginDTO) obj;
 		boolean result = false ;
 		
-		if (!CommonValidations.isStringEmpty(loginDTO.getEndUser())) {
+		if (!CommonValidations.isStringEmpty(loginDTO.getEmailAddress())) {
 			if (!CommonValidations.isStringEmpty(loginDTO.getPassword())){
 				if (!CommonValidations.isStringEmpty(loginDTO.getLoginMode())) {
 					result = true;
