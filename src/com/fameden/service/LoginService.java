@@ -75,6 +75,9 @@ public class LoginService {
 		}else {
 			loginDAO = new LoginDAO(); 
 			loginDAO.authenticateAndFetchUserProfile(loginDTO);
+			
+			
+			
 		}
 		
 		

@@ -2,8 +2,12 @@ package com.fameden.dao;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
+import java.util.List;
 
+import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Criterion;
+import org.hibernate.criterion.Restrictions;
 
 import com.fameden.bean.FamedenUser;
 import com.fameden.bean.FamedenUserIdsMap;
@@ -36,28 +40,53 @@ public class LoginDAO {
 		boolean isAuthenticationSuccessful = false;
 		//FamedenUserInfo userProfileBean = new FamedenUserInfo();
 		
+		CommonUserOperation emailPresenceCheck = new  CommonUserOperation();
+		
 		FamedenUser user = new FamedenUser();
 		FamedenUserIdsMap userIdMap= new FamedenUserIdsMap();
 		FamedenUserKeys userCredentials = new FamedenUserKeys();
+		FamedenUserMappingCompositePK userIdCompositePK = new FamedenUserMappingCompositePK();
 		
 		Session session = DatabaseConfig.getSessionFactory()
 				.getCurrentSession();
 		
 		session.beginTransaction();
 		
-		//user = (FamedenUser)session.get(FamedenUser.class, loginDTO.getEmailAddress());
-		
-		if (1 == 2)  {
+		user = emailPresenceCheck.searchByEmailId(loginDTO.getEmailAddress());
+		//System.out.println(user.getRegistrationMode());
+		if (user==null)  {
 			
 			
 			
 		}else {
+			Criteria crit = session.createCriteria(FamedenUserIdsMap.class);
+			//crit.createAlias("famedenUser", "user");
+			//System.out.println(user.getFamdenExternalUserId());
+			Criterion externalIdRestriction = Restrictions
+					.eq("famedenUserMappingCompositePK.famedenUser.famdenExternalUserId", user.getFamdenExternalUserId());
+			crit.add(externalIdRestriction);
+			List<FamedenUserIdsMap> famedenUserIdMappingList = ((List<FamedenUserIdsMap>) crit
+					.list());
+
+			if (famedenUserIdMappingList != null
+					&& famedenUserIdMappingList.size() > 0) {
+				userIdCompositePK = famedenUserIdMappingList.get(0).getFamedenUserMappingCompositePK();
+				
+				System.out.println(userIdCompositePK.getFamedenUserKeys().getFamdenInternalUserId());
+				userCredentials = (FamedenUserKeys)session.get(FamedenUserKeys.class, userIdCompositePK.getFamedenUserKeys().getFamdenInternalUserId());
+				System.out.println(userCredentials.getPassword());
+			}else{
+				System.out.println("empty list");
+			}
 			
-			userIdMap = (FamedenUserIdsMap) session.get(FamedenUserIdsMap.class, 10);
+			
+
+
+			/*userIdMap = (FamedenUserIdsMap) session.get(FamedenUserIdsMap.class, 10);
 			FamedenUserMappingCompositePK compositePK = userIdMap.getFamedenUserMappingCompositePK();
 			userCredentials = (FamedenUserKeys)session.get(FamedenUserKeys.class, compositePK.getFamedenUserKeys().getFamdenInternalUserId());
-			
-			System.out.println(userCredentials.getPassword());
+			*/
+			//System.out.println(userCredentials.getPassword());
 			
 		}
 		

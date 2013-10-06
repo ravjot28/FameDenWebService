@@ -49,6 +49,10 @@ public class LoginWebservice implements ILoginWS, ICommon {
 		loginDTO.setStatus(GlobalConstants.IN_PROCESS);
 		loginDTO.setTransactionId(null);
 		
+		
+		
+		
+		
 		return loginDTO;
 	}
 
