@@ -24,5 +24,9 @@ public interface ILoginWS {
     @WebResult(name = "LoginResponse")
     public FamedenLoginResponse login(@WebParam(name="LoginRequest")FamedenLoginRequest loginRequest);
 	
+    @WebMethod(operationName = "ForgotPassword")
+    @WebResult(name = "ForgotPasswordResponse")
+    public FamedenLoginResponse forgotPassword(@WebParam(name="ForgotPasswordRequest")FamedenLoginRequest loginRequest);
+	
 	
 }

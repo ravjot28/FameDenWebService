@@ -46,18 +46,14 @@ public class LoginWebservice implements ILoginWS, ICommon {
 
 		return loginDTO;
 	}
-	
-	public static void main(String[] args) {
-		FamedenLoginRequest login = new FamedenLoginRequest();
 
-		login.setEmailAddress("arora.punet777@gmail.com");
-		login.setPassword("123");
-		login.setCustomerIP("10.0.0.10");
-		login.setLoginMode("Twitter");
 
-			LoginWebservice webService = new LoginWebservice();
-			webService.login(login);
+	@Override
+	public FamedenLoginResponse forgotPassword(FamedenLoginRequest loginRequest) {
 		
+		
+		
+		return null;
 	}
 	
 

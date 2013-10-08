@@ -2,17 +2,15 @@ package com.fameden.dao;
 
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
-import java.sql.Date;
-import java.util.Calendar;
 import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import com.fameden.bean.FamedenRequest;
-import com.fameden.bean.FamedenRequestDetail;
 import com.fameden.bean.FamedenUser;
 import com.fameden.bean.FamedenUserIdsMap;
 import com.fameden.bean.FamedenUserInfo;
@@ -27,138 +25,123 @@ import com.fameden.util.SaltTextEncryption;
 
 public class LoginDAO {
 
-	public static void main(String[] args) {
-		LoginRequestDTO login = new LoginRequestDTO();
+	Logger logger = LoggerFactory.getLogger(UserRegistrationDAO.class);
 
-		login.setEmailAddress("arora.puneet777@gmail.com");
-		login.setPassword("1234");
+	public LoginResponseDTO authenticateAndFetchUserProfile(
+			LoginRequestDTO loginDTO) throws Exception {
 
-		try {
-			LoginDAO dao = new LoginDAO();
-			dao.authenticateAndFetchUserProfile(login);
-		} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public Object authenticateAndFetchUserProfile(LoginRequestDTO loginDTO)
-			throws NoSuchAlgorithmException, InvalidKeySpecException {
-
-		LoginResponseDTO loginResponse = new LoginResponseDTO();
-		// boolean isAuthenticationSuccessful = false;
-		int requestID = -1;
-		FamedenRequestDetail requestDetail = null;
-		FamedenUser user = new FamedenUser();
-		// FamedenUserIdsMap userIdMap = new FamedenUserIdsMap();
-		FamedenUserKeys userCredentials = new FamedenUserKeys();
-		FamedenUserMappingCompositePK userIdCompositePK = new FamedenUserMappingCompositePK();
-		CommonUserOperation emailPresenceCheck = new CommonUserOperation();
-
-		requestDetail = this.populateRequestBeanFromDTO(loginDTO);
-		CommonRequestOperationDAO loginRequest = new CommonRequestOperationDAO();
+		LoginResponseDTO loginResponse = null;
+		// FamedenRequestDetail requestDetail = null;
+		FamedenUser user = null;
+		// = new FamedenUserMappingCompositePK();
+		CommonUserOperation emailPresenceCheck = null;// new
+														// CommonUserOperation();
+		Session session = null;
 
 		try {
-			requestID = loginRequest.insertRequest(requestDetail);
+			emailPresenceCheck = new CommonUserOperation();
+			user = emailPresenceCheck.searchByEmailId(loginDTO
+					.getEmailAddress());
 		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			logger.error(e.getMessage(), e);
+			throw e;
 		}
-		user = emailPresenceCheck.searchByEmailId(loginDTO.getEmailAddress());
-		
+
+		loginResponse = new LoginResponseDTO();
 		if (user == null) {
-			try {
-				
-				loginRequest.updateRequestStatus(requestID,
-						GlobalConstants.FAILURE);
-			} catch (Exception e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 			loginResponse.setStatus(GlobalConstants.FAILURE);
-			loginResponse.setMessage(LoginConstants.userNameNotFound
-					+ loginDTO.getEmailAddress());
+			loginResponse.setMessage(LoginConstants.loginFailed);
 
 		} else {
-			Session session = DatabaseConfig.getSessionFactory().openSession();
 
-			session.beginTransaction();
+			try {
 
-			Criteria crit = session.createCriteria(FamedenUserIdsMap.class);
-			Criterion externalIdRestriction = Restrictions
-					.eq("famedenUserMappingCompositePK.famedenUser.famdenExternalUserId",
-							user.getFamdenExternalUserId());
-			crit.add(externalIdRestriction);
-			List<FamedenUserIdsMap> famedenUserIdMappingList = ((List<FamedenUserIdsMap>) crit
-					.list());
+				session = DatabaseConfig.getSessionFactory().openSession();
 
-			if (famedenUserIdMappingList != null
-					&& famedenUserIdMappingList.size() > 0) {
-				userIdCompositePK = famedenUserIdMappingList.get(0)
-						.getFamedenUserMappingCompositePK();
+				session.beginTransaction();
 
-				System.out.println(userIdCompositePK.getFamedenUserKeys()
-						.getFamdenInternalUserId());
-				userCredentials = (FamedenUserKeys) session
-						.get(FamedenUserKeys.class, userIdCompositePK
-								.getFamedenUserKeys().getFamdenInternalUserId());
+				String encryptedPasswordFromDB = null;
+				String encryptedPasswordFromUI = null;
 
-				if (loginDTO.getPassword().compareTo(
-						userCredentials.getPassword()) == 0) {
+				encryptedPasswordFromDB = this.getPasswordFromDB(session, user);
 
-					FamedenUserInfo userInfo = new FamedenUserInfo();
-					userInfo = (FamedenUserInfo) session.get(
-							FamedenUserInfo.class,
-							user.getFamdenExternalUserId());
+				if (encryptedPasswordFromDB != null) {
 
-					try {
-						loginRequest.updateRequestStatus(requestID,
-								GlobalConstants.SUCCESS);
-					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+					if (encryptedPasswordFromDB.equals(encryptedPasswordFromUI)) {
+
+						loginResponse = this.populateResponseDTO(session,user);
+						// TODO Fetch User Profile
+					} else {
+						loginResponse.setStatus(GlobalConstants.FAILURE);
+						loginResponse.setMessage(LoginConstants.loginFailed);
 					}
 
 				} else {
 					try {
-						loginRequest.updateRequestStatus(requestID,
-								GlobalConstants.FAILURE);
+						loginResponse.setStatus(GlobalConstants.FAILURE);
+						loginResponse.setMessage(LoginConstants.loginFailed);
+
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
+						logger.error(e.getMessage(), e);
+						throw e;
 					}
 					loginResponse.setStatus(GlobalConstants.FAILURE);
-					loginResponse.setMessage(LoginConstants.passwordIncorrect
-							+ loginDTO.getEmailAddress());
+					loginResponse.setMessage(LoginConstants.loginFailed);
+
 				}
-
+				session.getTransaction().commit();
+				session.close();
+			} catch (Exception e) {
+				if (session != null) {
+					session.getTransaction().rollback();
+				}
+				logger.error(e.getMessage(), e);
+				throw e;
 			}
-			session.getTransaction().commit();
-			session.close();
 		}
-
-		return null;
+		return loginResponse;
 
 	}
 
-	private FamedenRequestDetail populateRequestBeanFromDTO(Object obj) {
-		LoginRequestDTO loginDTO = (LoginRequestDTO) obj;
-		FamedenRequestDetail requestDetail = new FamedenRequestDetail();
-		FamedenRequest request = new FamedenRequest();
+	private String getPasswordFromDB(Session session, FamedenUser user) {
 
-		request.setCustomerIP(loginDTO.getCustomerIP());
-		request.setRequestDate(new Date(Calendar.getInstance()
-				.getTimeInMillis()));
-		request.setFamedenUserId(0);
-		request.setRequestStatus(GlobalConstants.IN_PROCESS);
-		request.setRequestType(GlobalConstants.Login_REQUEST);
-		request.setRequestUpdateDate(new Date(Calendar.getInstance()
-				.getTimeInMillis()));
-		request.setRequestUser(loginDTO.getEmailAddress());
+		String encryptedPassword = "";
+		FamedenUserKeys userCredentials = new FamedenUserKeys();
+		FamedenUserMappingCompositePK userIdCompositePK = new FamedenUserMappingCompositePK();
 
-		requestDetail.setFamedenRequest(request);
+		Criteria crit = session.createCriteria(FamedenUserIdsMap.class);
+		Criterion externalIdRestriction = Restrictions
+				.eq("famedenUserMappingCompositePK.famedenUser.famdenExternalUserId",
+						user.getFamdenExternalUserId());
+		crit.add(externalIdRestriction);
 
-		return requestDetail;
+		List famedenUserIdMappingList = crit.list();
+
+		if (famedenUserIdMappingList != null
+				&& famedenUserIdMappingList.size() > 0) {
+			FamedenUserIdsMap idMap = (FamedenUserIdsMap) famedenUserIdMappingList
+					.get(0);
+			userIdCompositePK = idMap.getFamedenUserMappingCompositePK();
+
+			userCredentials = (FamedenUserKeys) session.get(
+					FamedenUserKeys.class, userIdCompositePK
+							.getFamedenUserKeys().getFamdenInternalUserId());
+		}
+		encryptedPassword = userCredentials.getPassword();
+		return encryptedPassword;
+	}
+
+	private LoginResponseDTO populateResponseDTO(Session session, FamedenUser user)
+	{
+		LoginResponseDTO responseDTO = new LoginResponseDTO();
+		FamedenUserInfo userInfo = new FamedenUserInfo();
+		userInfo = (FamedenUserInfo) session.get(FamedenUserInfo.class,user.getFamdenExternalUserId());
+		
+		
+		responseDTO.setUserName(userInfo.getFullName());
+		responseDTO.setStatus(GlobalConstants.SUCCESS);
+		
+		return responseDTO;
 	}
 
 	private boolean authenticateUser(LoginRequestDTO loginDTO)

@@ -1,24 +1,102 @@
 package com.fameden.service;
 
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fameden.bean.FamedenRequest;
+import com.fameden.bean.FamedenRequestDetail;
 import com.fameden.constants.GlobalConstants;
 import com.fameden.constants.LoginConstants;
+import com.fameden.dao.CommonRequestOperationDAO;
 import com.fameden.dao.LoginDAO;
 import com.fameden.dto.LoginRequestDTO;
+import com.fameden.dto.LoginResponseDTO;
 import com.fameden.exception.LoginValidationException;
+import com.fameden.model.FamedenLoginRequest;
+import com.fameden.model.FamedenLoginResponse;
 import com.fameden.util.CommonValidations;
 
-public class LoginService {
+public class LoginService implements ICommonService{
 
 	Logger logger = LoggerFactory.getLogger(LoginService.class);
 
-	private boolean validate(Object obj) throws LoginValidationException {
 
+	@SuppressWarnings("null")
+	@Override
+	public Object processRequest(Object obj) {
+
+		LoginRequestDTO loginDTO = (LoginRequestDTO) obj;
+		boolean validation = false;
+		String errorMessage = null;
+		int requestId = -1;
+		LoginResponseDTO loginResponseDTO = null;
+		
+		try {
+			validation = validate(loginDTO);
+		} catch (LoginValidationException e) {
+			logger.error(e.getMessage(), e);
+			errorMessage = e.getMessage();
+		} 
+
+		if (!validation && errorMessage != null) {
+			loginDTO.setStatus(GlobalConstants.FAILURE);
+			loginDTO.setMessage(errorMessage);
+
+		} else {
+			
+			FamedenRequestDetail famedenRequestDetail = (FamedenRequestDetail) populateRequest(loginDTO);
+			
+			try {
+				requestId = insertRequest(famedenRequestDetail);
+				
+			} catch (Exception e) {
+				logger.error(e.getMessage());
+			}
+			if (requestId !=-1) {
+				
+				LoginDAO loginDAO = new LoginDAO();
+				
+				try {
+					loginResponseDTO = (LoginResponseDTO)loginDAO.authenticateAndFetchUserProfile(loginDTO);
+				} catch (Exception e) {
+					loginResponseDTO.setStatus(GlobalConstants.FAILURE);
+					loginResponseDTO.setMessage(GlobalConstants.GENERIC_ERROR_MESSAGE);
+				}
+				
+				if (loginResponseDTO != null) {
+					loginResponseDTO.setStatus(GlobalConstants.SUCCESS);
+				}else {
+					loginResponseDTO.setStatus(GlobalConstants.FAILURE);
+					loginResponseDTO.setMessage(errorMessage);
+				}
+	
+			}
+			
+		}
+		
+		CommonRequestOperationDAO codao = new CommonRequestOperationDAO();
+		try {
+			if (loginResponseDTO.getStatus().equals(GlobalConstants.SUCCESS)) {
+				codao.updateRequestStatus(requestId, GlobalConstants.SUCCESS);
+			} else if (requestId != -1) {
+				codao.updateRequestStatus(requestId, GlobalConstants.FAILURE);
+			}
+		} catch (Exception e) {
+			loginResponseDTO.setStatus(GlobalConstants.FAILURE);
+			loginResponseDTO.setMessage(GlobalConstants.GENERIC_ERROR_MESSAGE);
+		}
+		
+		FamedenLoginResponse response = (FamedenLoginResponse) populateResponse(loginResponseDTO);
+		
+
+		return response;
+
+	}
+
+
+	@Override
+	public boolean validate(Object obj) throws LoginValidationException {
+		
 		LoginRequestDTO loginDTO = (LoginRequestDTO) obj;
 		boolean result = false;
 
@@ -51,56 +129,59 @@ public class LoginService {
 		 */
 
 		return result;
-	}
-
-	public Object processRequest(Object obj) {
-
-		LoginRequestDTO loginDTO = (LoginRequestDTO) obj;
-		boolean validation = false;
-		LoginDAO loginDAO = null;
-		String errorMessage = null;
 		
-		try {
-			validation = validate(loginDTO);
-
-		} catch (LoginValidationException e) {
-			logger.error(e.getMessage(), e);
-			errorMessage = e.getMessage();
-		}
-
-		if (!validation && errorMessage != null) {
-			loginDTO.setStatus(GlobalConstants.FAILURE);
-			loginDTO.setExceptionMessage(errorMessage);
-			loginDTO.setMessage(errorMessage);
-
-		} else {
-			loginDAO = new LoginDAO();
-			try {
-				loginDAO.authenticateAndFetchUserProfile(loginDTO);
-			} catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-
-		}
-
-		return loginDAO;
 	}
 
-	/*
-	 * private FamedenLogin populateLoginBean(LoginDTO loginDTO){
-	 * 
-	 * FamedenLogin loginBean = new FamedenLogin(); FamedenRequest requestBean =
-	 * new FamedenRequest(); Date requestDate ;
-	 * 
-	 * loginBean.setUserID(loginDTO.getUserID());
-	 * loginBean.setPassword(loginDTO.getPassword());
-	 * loginBean.setLoginMode(loginDTO.getLoginMode());
-	 * requestBean.setCustomerIP(loginDTO.getCustomerIP());
-	 * //requestBean.setRequestDate(loginDTO.get);
-	 * 
-	 * return loginBean;
-	 * 
-	 * }
-	 */
+	@Override
+	public Object populateResponse(Object obj) {
+		
+		FamedenLoginResponse response = null ;
+		LoginResponseDTO dto = (LoginResponseDTO) obj;
+		
+		if (dto != null) {
+			response = new FamedenLoginResponse();
+			response.setStatus(dto.getStatus());
+			response.setTransactionId(dto.getTransactionId());
+			response.setErrorMessage(dto.getMessage());
+			
+			response.setUserName(dto.getUserName());
+		}
+		
+		return response;
+	}
+
+	@Override
+	public int insertRequest(FamedenRequestDetail famedenRequestDetail)
+			throws Exception {
+		int requestId = -1;
+		CommonRequestOperationDAO commonRequestOperationDAO = new CommonRequestOperationDAO();
+		try {
+			requestId = commonRequestOperationDAO
+					.insertRequest(famedenRequestDetail);
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+			throw e;
+		}
+		return requestId;
+	}
+
+	@Override
+	public Object populateRequest(Object obj) {
+		FamedenRequestDetail famedenRequestDetail = null;
+		FamedenRequest famedenRequest = null;
+		FamedenLoginRequest dto = (FamedenLoginRequest) obj;
+		if (dto != null) {
+			famedenRequest = new FamedenRequest();
+			famedenRequest.setCustomerIP(dto.getCustomerIP());
+			famedenRequest.setRequestStatus(GlobalConstants.IN_PROCESS);
+			famedenRequest.setRequestType(GlobalConstants.Login_REQUEST);
+			famedenRequest.setRequestUser(dto.getEmailAddress());
+			famedenRequest.setFamedenUserId(0);
+			famedenRequestDetail = new FamedenRequestDetail();
+			famedenRequestDetail.setFamedenRequest(famedenRequest);
+		}
+		return famedenRequestDetail;
+		
+	}
+	
 }

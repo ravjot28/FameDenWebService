@@ -8,7 +8,6 @@ public class LoginRequestDTO extends GenericDTO{
 	
 	private String LoginMode;
 	
-	private String ExceptionMessage;
 
 	public String getUserID() {
 		return userID;
@@ -33,14 +32,5 @@ public class LoginRequestDTO extends GenericDTO{
 	public void setLoginMode(String loginMode) {
 		LoginMode = loginMode;
 	}
-
-	public String getExceptionMessage() {
-		return ExceptionMessage;
-	}
-
-	public void setExceptionMessage(String exceptionMessage) {
-		ExceptionMessage = exceptionMessage;
-	}
-
 
 }
