@@ -1,6 +1,10 @@
 package com.fameden.dao;
 
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
@@ -21,6 +25,7 @@ import com.fameden.constants.LoginConstants;
 import com.fameden.dto.LoginRequestDTO;
 import com.fameden.dto.LoginResponseDTO;
 import com.fameden.util.DatabaseConfig;
+import com.fameden.util.RSAEncryptionKeyGeneration;
 import com.fameden.util.SaltTextEncryption;
 
 public class LoginDAO {
@@ -66,10 +71,11 @@ public class LoginDAO {
 				encryptedPasswordFromDB = this.getPasswordFromDB(session, user);
 
 				if (encryptedPasswordFromDB != null) {
+					boolean isAuthenticatedUser = this.authenticateUser(loginDTO) ;
+						
+					if (isAuthenticatedUser) {
 
-					if (encryptedPasswordFromDB.equals(encryptedPasswordFromUI)) {
-
-						loginResponse = this.populateResponseDTO(session,user);
+						loginResponse = this.populateResponseDTO(session, user);
 						// TODO Fetch User Profile
 					} else {
 						loginResponse.setStatus(GlobalConstants.FAILURE);
@@ -131,16 +137,16 @@ public class LoginDAO {
 		return encryptedPassword;
 	}
 
-	private LoginResponseDTO populateResponseDTO(Session session, FamedenUser user)
-	{
+	private LoginResponseDTO populateResponseDTO(Session session,
+			FamedenUser user) {
 		LoginResponseDTO responseDTO = new LoginResponseDTO();
 		FamedenUserInfo userInfo = new FamedenUserInfo();
-		userInfo = (FamedenUserInfo) session.get(FamedenUserInfo.class,user.getFamdenExternalUserId());
-		
-		
+		userInfo = (FamedenUserInfo) session.get(FamedenUserInfo.class,
+				user.getFamdenExternalUserId());
+
 		responseDTO.setUserName(userInfo.getFullName());
 		responseDTO.setStatus(GlobalConstants.SUCCESS);
-		
+
 		return responseDTO;
 	}
 
@@ -148,15 +154,33 @@ public class LoginDAO {
 			throws NoSuchAlgorithmException, InvalidKeySpecException {
 
 		boolean isLoginSuccessful = false;
-		String actualPassword = "ravjot28";
 
-		// TODO: Get Actual Password from db
+		try {
+			if (!RSAEncryptionKeyGeneration.areKeysPresent()) {
+				RSAEncryptionKeyGeneration.generateKey();
+			}
 
-		SaltTextEncryption ste = new SaltTextEncryption();
+			final String rsaEncryptedPassword = loginDTO.getPassword();
+			ObjectInputStream inputStream = null;
+			inputStream = new ObjectInputStream(new FileInputStream(
+					RSAEncryptionKeyGeneration.PUBLIC_KEY_FILE));
+			final PublicKey publicKey = (PublicKey) inputStream.readObject();
+			final byte[] cipherText = RSAEncryptionKeyGeneration.encrypt(
+					rsaEncryptedPassword, publicKey);
+			inputStream = new ObjectInputStream(new FileInputStream(
+					RSAEncryptionKeyGeneration.PRIVATE_KEY_FILE));
+			final PrivateKey privateKey = (PrivateKey) inputStream.readObject();
+			final String userPassword = RSAEncryptionKeyGeneration.decrypt(
+					cipherText, privateKey);
 
-		String hash = ste.createHash(loginDTO.getPassword());
+			SaltTextEncryption ste = new SaltTextEncryption();
+			String saltEncryptedPassword = ste.createHash(userPassword);
+			isLoginSuccessful = ste.validatePassword("ravjot2.8",
+					saltEncryptedPassword);
 
-		isLoginSuccessful = ste.validatePassword(actualPassword, hash);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		return isLoginSuccessful;
 	}
