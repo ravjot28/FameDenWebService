@@ -14,6 +14,9 @@ import com.fameden.webservice.contracts.ILoginWS;
 @WebService(endpointInterface = "com.fameden.webservice.contracts.ILoginWS", serviceName = "LoginService", portName = "LoginPort")
 public class LoginWebservice implements ILoginWS, ICommon {
 
+	public void LoginWebservice() {
+		
+	}
 	@Override
 	public FamedenLoginResponse login(FamedenLoginRequest loginRequestModel) {
 
