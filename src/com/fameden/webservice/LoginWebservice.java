@@ -47,13 +47,5 @@ public class LoginWebservice implements ILoginWS, ICommon {
 		return loginDTO;
 	}
 	
-	@Override
-	public FamedenLoginResponse forgotPassword(FamedenLoginRequest loginRequest) {
-		
-		
-		
-		return null;
-	}
-	
 
 }

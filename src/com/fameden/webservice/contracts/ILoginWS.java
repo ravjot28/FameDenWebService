@@ -17,16 +17,13 @@ public interface ILoginWS {
      * 
      * @param FamedenLoginModel (containing user id, encrypted pass, login mode and Request details.)
      * @return
-     *     returns com.fameden.model.FamedenUserProfileModel
+     *     returns com.fameden.model.FamedenLoginResponse
      */
     
     @WebMethod(operationName = "LoginAndGetUserProfile")
     @WebResult(name = "LoginResponse")
     public FamedenLoginResponse login(@WebParam(name="LoginRequest")FamedenLoginRequest loginRequest);
 	
-    @WebMethod(operationName = "ForgotPassword")
-    @WebResult(name = "ForgotPasswordResponse")
-    public FamedenLoginResponse forgotPassword(@WebParam(name="ForgotPasswordRequest")FamedenLoginRequest loginRequest);
-	
+    
 	
 }
