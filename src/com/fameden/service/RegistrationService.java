@@ -30,7 +30,7 @@ public class RegistrationService implements ICommonService {
 		boolean result = false;
 		if (!CommonValidations.isStringEmpty(dto.getEmailAddress())
 				&& CommonValidations.isValidEmailAddress(dto.getEmailAddress())) {
-			if (!CommonValidations.isStringEmpty(dto.getFullName())) {
+			if (!CommonValidations.isStringEmpty(dto.getFullName()) || !dto.getRegistrationType().equals(RegistrationConstants.famedenRegistrationType)) {
 				if (!CommonValidations.isStringEmpty(dto.getPassword())) {
 					CommonUserOperation commonUserOperation = new CommonUserOperation();
 					if (commonUserOperation.searchByEmailId(dto

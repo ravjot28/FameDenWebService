@@ -13,6 +13,9 @@ import java.security.PublicKey;
 
 import javax.crypto.Cipher;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import sun.misc.BASE64Decoder;
 import sun.misc.BASE64Encoder;
 
@@ -21,9 +24,11 @@ import sun.misc.BASE64Encoder;
  * 
  */
 public class RSAEncryptionKeyGeneration {
+	
+	private static Logger logger = LoggerFactory.getLogger(RSAEncryptionKeyGeneration.class);
 	public static final String ALGORITHM = "RSA";
 
-	public static final String PRIVATE_KEY_FILE = "private.key";
+	public static final String PRIVATE_KEY_FILE = System.getProperty("privateKey");
 
 	public static final String PUBLIC_KEY_FILE = "public.key";
 
@@ -105,6 +110,7 @@ public class RSAEncryptionKeyGeneration {
 		ObjectInputStream inputStream = null;
 		byte[] dectyptedText = null;
 		try {
+			logger.info("The path is "+System.getProperty("privateKey"));
 			inputStream = new ObjectInputStream(new FileInputStream(
 					PRIVATE_KEY_FILE));
 			PrivateKey key = (PrivateKey) inputStream.readObject();

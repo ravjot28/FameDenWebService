@@ -23,7 +23,7 @@ public class FamedenContextListener implements ServletContextListener {
      */
     public void contextInitialized(ServletContextEvent arg0) {
     	System.setProperty("privateKey",
-    			arg0.getServletContext().getRealPath("private.key"));
+    			arg0.getServletContext().getRealPath("/WEB-INF/classes/private.key"));
     }
 
 	/**
