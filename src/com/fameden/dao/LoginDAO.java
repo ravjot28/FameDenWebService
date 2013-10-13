@@ -55,15 +55,15 @@ public class LoginDAO {
 				session.beginTransaction();
 
 				String encryptedPasswordFromDB = null;
-				String encryptedPasswordFromUI = null;
+				//String encryptedPasswordFromUI = null;
 				
 				
 				
 				encryptedPasswordFromDB = this.getPasswordFromDB(session, user);
 
 				if (encryptedPasswordFromDB != null) {
-					boolean isAuthenticatedUser = encryptedPasswordFromDB.equals(loginDTO.getPassword());
-					//boolean isAuthenticatedUser = this.authenticateUser(loginDTO) ;
+					
+					boolean isAuthenticatedUser = this.authenticateUser(session,user, loginDTO) && encryptedPasswordFromDB.equals(loginDTO.getPassword());
 						
 					if (isAuthenticatedUser) {
 
@@ -141,13 +141,26 @@ public class LoginDAO {
 
 		return loginDTO;
 	}
+	
 
-	private boolean authenticateUser(LoginDTO loginDTO)
-			throws NoSuchAlgorithmException, InvalidKeySpecException {
-
+	private boolean authenticateUser(Session session, FamedenUser user, LoginDTO loginDTO)
+			//throws NoSuchAlgorithmException, InvalidKeySpecException
+			{
+		boolean isUserActive =false;
+		boolean isLoginModeCorrect = false;
+		boolean isPasswordCorrect = true;
 		boolean isLoginSuccessful = false;
 
 		try {
+			
+			if (user.getRegistrationMode().equals(loginDTO.getLoginMode())) {
+				isLoginModeCorrect = true;
+			}
+			if (user.getActive()=='Y') {
+				isUserActive = true;
+			}
+			
+			
 /*			if (!RSAEncryptionKeyGeneration.areKeysPresent()) {
 				RSAEncryptionKeyGeneration.generateKey();
 			}
@@ -170,6 +183,9 @@ public class LoginDAO {
 			isLoginSuccessful = ste.validatePassword("ravjot2.8",
 					saltEncryptedPassword);
 */
+			if (isUserActive&& isLoginModeCorrect && isPasswordCorrect) {
+				isLoginSuccessful = true;
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

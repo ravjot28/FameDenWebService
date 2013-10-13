@@ -7,15 +7,24 @@ import com.fameden.dao.CommonRequestOperationDAO;
 import com.fameden.dao.CommonUserOperation;
 import com.fameden.dao.UserRegistrationDAO;
 import com.fameden.dto.RegistrationDTO;
-import com.fameden.model.FamedenRegistrationRequest;
-import com.fameden.webservice.RegistrationWebService;
+import com.fameden.model.FamedenLoginRequest;
+import com.fameden.model.FamedenLoginResponse;
+import com.fameden.webservice.login.LoginWebservice;
 
 public class Test {
 	public static void main(String[] args) {
 
+		//Test t = new Test();
+		try {
+			testUserRegistrationDAO();
+			//testLogin();
+		} catch (Exception e) {
+			// TODO: handle exception
+		}
+		
 	}
 
-	public void testRegistrationWebService() {
+	/*public static void testRegistrationWebService() {
 		RegistrationWebService r = new RegistrationWebService();
 		FamedenRegistrationRequest request = new FamedenRegistrationRequest();
 		request.setCustomerIP("10.0.0.10");
@@ -28,7 +37,7 @@ public class Test {
 		request.setRequestType(GlobalConstants.REGISTRATION_REQUEST);
 		request.setAlternateEmailAddress("ravjot.singh.28@gmail.com");
 		r.registerUser(request);
-	}
+	}*/
 
 	public void testCommonRequestOperationDAO() throws Exception {
 
@@ -77,18 +86,34 @@ public class Test {
 
 	}
 
-	public void testUserRegistrationDAO() throws Exception {
+	public static void testUserRegistrationDAO() throws Exception {
 
 		RegistrationDTO dto = new RegistrationDTO();
 		dto.setCustomerIP("192.168.1.1");
-		dto.setEmailAddress("ravjot28@gmail.com");
-		dto.setFullName("Ravjot Singh");
-		dto.setPassword("ravjot123");
+		dto.setEmailAddress("arora.puneet77@gmail.com");
+		dto.setFullName("Puneet Arora");
+		dto.setPassword("arora123");
 		dto.setPrivateToken("ravjottoken1");
 		dto.setPublicToken("ravjottoken2");
 		dto.setRegistrationType("facebook");
 		new UserRegistrationDAO().registerUser(dto);
 
+	}
+	
+	public static void testLogin(){
+		
+		FamedenLoginRequest request = new FamedenLoginRequest();
+		request.setCustomerIP("10.0.0.12");
+		request.setEmailAddress("ravjot28@gmail.com");
+		request.setPassword("ravjot123");
+		request.setLoginMode("Twitter");
+		
+		LoginWebservice loginmethod = new LoginWebservice();
+		FamedenLoginResponse response =  loginmethod.login(request);
+		
+		System.out.println(response.getStatus());
+		
+		
 	}
 
 }

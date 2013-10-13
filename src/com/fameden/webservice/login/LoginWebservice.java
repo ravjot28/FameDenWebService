@@ -1,4 +1,4 @@
-package com.fameden.webservice;
+package com.fameden.webservice.login;
 
 import javax.jws.WebService;
 
@@ -9,7 +9,7 @@ import com.fameden.model.FamedenLoginRequest;
 import com.fameden.model.FamedenLoginResponse;
 import com.fameden.service.LoginService;
 import com.fameden.webservice.contracts.ICommon;
-import com.fameden.webservice.contracts.ILoginWS;
+import com.fameden.webservice.contracts.login.ILoginWS;
 
 @WebService(endpointInterface = "com.fameden.webservice.contracts.ILoginWS", serviceName = "LoginService", portName = "LoginPort")
 public class LoginWebservice implements ILoginWS, ICommon {
