@@ -1,5 +1,8 @@
 package com.fameden.service;
 
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +17,8 @@ import com.fameden.dto.RegistrationDTO;
 import com.fameden.exception.RegistrationValidationException;
 import com.fameden.model.FamedenRegistrationResponse;
 import com.fameden.util.CommonValidations;
+import com.fameden.util.RSAEncryptionKeyGeneration;
+import com.fameden.util.SaltTextEncryption;
 import com.fameden.util.SendMail;
 
 public class RegistrationService implements ICommonService {
@@ -80,26 +85,31 @@ public class RegistrationService implements ICommonService {
 				String verificationCode = null;
 
 				try {
+					processPasswords(dto);
 					verificationCode = userRegistrationDAO.registerUser(dto);
+
+					if (verificationCode != null) {
+						String message = "Hi "
+								+ dto.getFullName()
+								+ "\n\nPlease find below the URL to verify your email address for further communications\n\n"
+								+ "http://localhost:8070/FamedenVerificationProject/UserEmailVerification?userEmailVerification="
+								+ verificationCode
+								+ "\n\nThanks and Regards,\nFameDen Inc.";
+						String to[] = { dto.getEmailAddress() };
+						SendMail sm = new SendMail(
+								"Please Verify Your Email Address", message,
+								null, to);
+						sm.send();
+
+						dto.setStatus(GlobalConstants.SUCCESS);
+					} else {
+						throw new Exception();
+					}
 				} catch (Exception e) {
 					dto.setStatus(GlobalConstants.FAILURE);
 					dto.setMessage(GlobalConstants.GENERIC_ERROR_MESSAGE);
 				}
-				if (verificationCode != null) {
-					String message = "Hi "
-							+ dto.getFullName()
-							+ "\n\nPlease find below the URL to verify your email address for further communications\n\n"
-							+ "http://localhost:8070/FamedenVerificationProject/UserEmailVerification?userEmailVerification="
-							+ verificationCode
-							+ "\n\nThanks and Regards,\nFameDen Inc.";
-					String to[] = { dto.getEmailAddress() };
-					SendMail sm = new SendMail(
-							"Please Verify Your Email Address", message, null,
-							to);
-					sm.send();
 
-					dto.setStatus(GlobalConstants.SUCCESS);
-				}
 			} else {
 				dto.setStatus(GlobalConstants.FAILURE);
 				dto.setMessage(errorMessage);
@@ -117,10 +127,18 @@ public class RegistrationService implements ICommonService {
 			dto.setStatus(GlobalConstants.FAILURE);
 			dto.setMessage(GlobalConstants.GENERIC_ERROR_MESSAGE);
 		}
-		
+
 		FamedenRegistrationResponse response = (FamedenRegistrationResponse) populateResponse(dto);
-		
+
 		return response;
+	}
+
+	private RegistrationDTO processPasswords(RegistrationDTO dto)
+			throws NoSuchAlgorithmException, InvalidKeySpecException {
+		String password = RSAEncryptionKeyGeneration.decryptText(dto
+				.getPassword());
+		dto.setPassword(new SaltTextEncryption().createHash(password));
+		return dto;
 	}
 
 	public Object populateResponse(Object obj) {
