@@ -20,6 +20,8 @@ import com.fameden.constants.GlobalConstants;
 import com.fameden.constants.LoginConstants;
 import com.fameden.dto.LoginDTO;
 import com.fameden.util.DatabaseConfig;
+import com.fameden.util.RSAEncryptionKeyGeneration;
+import com.fameden.util.SaltTextEncryption;
 
 public class LoginDAO {
 
@@ -63,7 +65,7 @@ public class LoginDAO {
 
 				if (encryptedPasswordFromDB != null) {
 					
-					boolean isAuthenticatedUser = this.authenticateUser(session,user, loginDTO) && encryptedPasswordFromDB.equals(loginDTO.getPassword());
+					boolean isAuthenticatedUser = this.authenticateUser(session, user, loginDTO);
 						
 					if (isAuthenticatedUser) {
 
@@ -144,11 +146,11 @@ public class LoginDAO {
 	
 
 	private boolean authenticateUser(Session session, FamedenUser user, LoginDTO loginDTO)
-			//throws NoSuchAlgorithmException, InvalidKeySpecException
+			throws NoSuchAlgorithmException, InvalidKeySpecException
 			{
 		boolean isUserActive =false;
 		boolean isLoginModeCorrect = false;
-		boolean isPasswordCorrect = true;
+		boolean isPasswordCorrect = false;
 		boolean isLoginSuccessful = false;
 
 		try {
@@ -160,6 +162,15 @@ public class LoginDAO {
 				isUserActive = true;
 			}
 			
+			String password = RSAEncryptionKeyGeneration.decryptText(loginDTO
+					.getPassword());
+			
+			SaltTextEncryption ste = new SaltTextEncryption();
+			
+			String encryptedPasswordFromDB = getPasswordFromDB(session, user);
+
+			isPasswordCorrect = ste.validatePassword(password,
+					encryptedPasswordFromDB);
 			
 /*			if (!RSAEncryptionKeyGeneration.areKeysPresent()) {
 				RSAEncryptionKeyGeneration.generateKey();
