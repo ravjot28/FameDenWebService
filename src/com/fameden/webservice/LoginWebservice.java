@@ -3,6 +3,7 @@ package com.fameden.webservice;
 import javax.jws.WebService;
 
 import com.fameden.constants.GlobalConstants;
+import com.fameden.dto.LoginDTO;
 import com.fameden.dto.LoginRequestDTO;
 import com.fameden.model.FamedenLoginRequest;
 import com.fameden.model.FamedenLoginResponse;
@@ -18,8 +19,7 @@ public class LoginWebservice implements ILoginWS, ICommon {
 
 		FamedenLoginResponse userProfile = null;
 
-
-			LoginRequestDTO loginDTO = (LoginRequestDTO) this.populateDTO(loginRequestModel);			
+			LoginDTO loginDTO = (LoginDTO) this.populateDTO(loginRequestModel);			
 			LoginService loginService = new LoginService();
 			
 			userProfile = (FamedenLoginResponse)loginService.processRequest(loginDTO);
@@ -32,7 +32,7 @@ public class LoginWebservice implements ILoginWS, ICommon {
 	@Override
 	public Object populateDTO(Object obj) {
 
-		LoginRequestDTO loginDTO = new LoginRequestDTO();
+		LoginDTO loginDTO = new LoginDTO();
 		FamedenLoginRequest loginModel = (FamedenLoginRequest) obj;
 		
 		loginDTO.setCustomerIP(loginModel.getCustomerIP());

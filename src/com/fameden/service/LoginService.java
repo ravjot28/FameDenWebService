@@ -9,10 +9,10 @@ import com.fameden.constants.GlobalConstants;
 import com.fameden.constants.LoginConstants;
 import com.fameden.dao.CommonRequestOperationDAO;
 import com.fameden.dao.LoginDAO;
+import com.fameden.dto.LoginDTO;
 import com.fameden.dto.LoginRequestDTO;
 import com.fameden.dto.LoginResponseDTO;
 import com.fameden.exception.LoginValidationException;
-import com.fameden.model.FamedenLoginRequest;
 import com.fameden.model.FamedenLoginResponse;
 import com.fameden.util.CommonValidations;
 
@@ -25,26 +25,26 @@ public class LoginService implements ICommonService{
 	@Override
 	public Object processRequest(Object obj) {
 
-		LoginRequestDTO loginDTO = (LoginRequestDTO) obj;
+		LoginDTO dto = (LoginDTO) obj;
 		boolean validation = false;
 		String errorMessage = null;
 		int requestId = -1;
-		LoginResponseDTO loginResponseDTO = null;
+		
 		
 		try {
-			validation = validate(loginDTO);
+			validation = validate(dto);
 		} catch (LoginValidationException e) {
 			logger.error(e.getMessage(), e);
 			errorMessage = e.getMessage();
 		} 
 
 		if (!validation && errorMessage != null) {
-			loginDTO.setStatus(GlobalConstants.FAILURE);
-			loginDTO.setMessage(errorMessage);
+			dto.setStatus(GlobalConstants.FAILURE);
+			dto.setMessage(errorMessage);
 
 		} else {
 			
-			FamedenRequestDetail famedenRequestDetail = (FamedenRequestDetail) populateRequest(loginDTO);
+			FamedenRequestDetail famedenRequestDetail = (FamedenRequestDetail) populateRequest(dto);
 			
 			try {
 				requestId = insertRequest(famedenRequestDetail);
@@ -57,18 +57,18 @@ public class LoginService implements ICommonService{
 				LoginDAO loginDAO = new LoginDAO();
 				
 				try {
-					loginResponseDTO = (LoginResponseDTO)loginDAO.authenticateAndFetchUserProfile(loginDTO);
+					dto = (LoginDTO)loginDAO.authenticateAndFetchUserProfile(dto);
 				} catch (Exception e) {
-					loginResponseDTO.setStatus(GlobalConstants.FAILURE);
-					loginResponseDTO.setMessage(GlobalConstants.GENERIC_ERROR_MESSAGE);
+					dto.setStatus(GlobalConstants.FAILURE);
+					dto.setMessage(GlobalConstants.GENERIC_ERROR_MESSAGE);
 				}
 				
-				if (loginResponseDTO != null) {
-					loginResponseDTO.setStatus(GlobalConstants.SUCCESS);
+				/*if (dto != null) {
+					dto.setStatus(GlobalConstants.SUCCESS);
 				}else {
-					loginResponseDTO.setStatus(GlobalConstants.FAILURE);
-					loginResponseDTO.setMessage(errorMessage);
-				}
+					dto.setStatus(GlobalConstants.FAILURE);
+					dto.setMessage(errorMessage);
+				}*/
 	
 			}
 			
@@ -76,17 +76,17 @@ public class LoginService implements ICommonService{
 		
 		CommonRequestOperationDAO codao = new CommonRequestOperationDAO();
 		try {
-			if (loginResponseDTO.getStatus().equals(GlobalConstants.SUCCESS)) {
+			if (dto.getStatus().equals(GlobalConstants.SUCCESS)) {
 				codao.updateRequestStatus(requestId, GlobalConstants.SUCCESS);
 			} else if (requestId != -1) {
 				codao.updateRequestStatus(requestId, GlobalConstants.FAILURE);
 			}
 		} catch (Exception e) {
-			loginResponseDTO.setStatus(GlobalConstants.FAILURE);
-			loginResponseDTO.setMessage(GlobalConstants.GENERIC_ERROR_MESSAGE);
+			dto.setStatus(GlobalConstants.FAILURE);
+			dto.setMessage(GlobalConstants.GENERIC_ERROR_MESSAGE);
 		}
 		
-		FamedenLoginResponse response = (FamedenLoginResponse) populateResponse(loginResponseDTO);
+		FamedenLoginResponse response = (FamedenLoginResponse) populateResponse(dto);
 		
 
 		return response;
@@ -97,12 +97,12 @@ public class LoginService implements ICommonService{
 	@Override
 	public boolean validate(Object obj) throws LoginValidationException {
 		
-		LoginRequestDTO loginDTO = (LoginRequestDTO) obj;
+		LoginDTO dto = (LoginDTO) obj;
 		boolean result = false;
 
-		if (!CommonValidations.isStringEmpty(loginDTO.getEmailAddress())) {
-			if (!CommonValidations.isStringEmpty(loginDTO.getPassword())) {
-				if (!CommonValidations.isStringEmpty(loginDTO.getLoginMode())) {
+		if (!CommonValidations.isStringEmpty(dto.getEmailAddress())) {
+			if (!CommonValidations.isStringEmpty(dto.getPassword())) {
+				if (!CommonValidations.isStringEmpty(dto.getLoginMode())) {
 					result = true;
 				} else {
 					throw new LoginValidationException(
@@ -136,7 +136,7 @@ public class LoginService implements ICommonService{
 	public Object populateResponse(Object obj) {
 		
 		FamedenLoginResponse response = null ;
-		LoginResponseDTO dto = (LoginResponseDTO) obj;
+		LoginDTO dto = (LoginDTO) obj;
 		
 		if (dto != null) {
 			response = new FamedenLoginResponse();
@@ -144,7 +144,7 @@ public class LoginService implements ICommonService{
 			response.setTransactionId(dto.getTransactionId());
 			response.setErrorMessage(dto.getMessage());
 			
-			response.setUserName(dto.getUserName());
+			response.setUserName(dto.getEmailAddress());
 		}
 		
 		return response;
@@ -169,7 +169,7 @@ public class LoginService implements ICommonService{
 	public Object populateRequest(Object obj) {
 		FamedenRequestDetail famedenRequestDetail = null;
 		FamedenRequest famedenRequest = null;
-		FamedenLoginRequest dto = (FamedenLoginRequest) obj;
+		LoginDTO dto = (LoginDTO) obj;
 		if (dto != null) {
 			famedenRequest = new FamedenRequest();
 			famedenRequest.setCustomerIP(dto.getCustomerIP());

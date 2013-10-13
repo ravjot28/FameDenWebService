@@ -1,10 +1,6 @@
 package com.fameden.dao;
 
-import java.io.FileInputStream;
-import java.io.ObjectInputStream;
 import java.security.NoSuchAlgorithmException;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.security.spec.InvalidKeySpecException;
 import java.util.List;
 
@@ -22,26 +18,20 @@ import com.fameden.bean.FamedenUserKeys;
 import com.fameden.bean.FamedenUserMappingCompositePK;
 import com.fameden.constants.GlobalConstants;
 import com.fameden.constants.LoginConstants;
-import com.fameden.dto.LoginRequestDTO;
-import com.fameden.dto.LoginResponseDTO;
+import com.fameden.dto.LoginDTO;
 import com.fameden.util.DatabaseConfig;
-import com.fameden.util.RSAEncryptionKeyGeneration;
-import com.fameden.util.SaltTextEncryption;
 
 public class LoginDAO {
 
 	Logger logger = LoggerFactory.getLogger(UserRegistrationDAO.class);
 
-	public LoginResponseDTO authenticateAndFetchUserProfile(
-			LoginRequestDTO loginDTO) throws Exception {
+	public LoginDTO authenticateAndFetchUserProfile(
+			LoginDTO loginDTO) throws Exception {
 
-		LoginResponseDTO loginResponse = null;
-		// FamedenRequestDetail requestDetail = null;
-		FamedenUser user = null;
-		// = new FamedenUserMappingCompositePK();
-		CommonUserOperation emailPresenceCheck = null;// new
-														// CommonUserOperation();
 		Session session = null;
+		FamedenUser user = null;
+	
+		CommonUserOperation emailPresenceCheck = null;
 
 		try {
 			emailPresenceCheck = new CommonUserOperation();
@@ -52,10 +42,9 @@ public class LoginDAO {
 			throw e;
 		}
 
-		loginResponse = new LoginResponseDTO();
 		if (user == null) {
-			loginResponse.setStatus(GlobalConstants.FAILURE);
-			loginResponse.setMessage(LoginConstants.loginFailed);
+			loginDTO.setStatus(GlobalConstants.FAILURE);
+			loginDTO.setMessage(LoginConstants.loginFailed);
 
 		} else {
 
@@ -67,32 +56,35 @@ public class LoginDAO {
 
 				String encryptedPasswordFromDB = null;
 				String encryptedPasswordFromUI = null;
-
+				
+				
+				
 				encryptedPasswordFromDB = this.getPasswordFromDB(session, user);
 
 				if (encryptedPasswordFromDB != null) {
-					boolean isAuthenticatedUser = this.authenticateUser(loginDTO) ;
+					boolean isAuthenticatedUser = encryptedPasswordFromDB.equals(loginDTO.getPassword());
+					//boolean isAuthenticatedUser = this.authenticateUser(loginDTO) ;
 						
 					if (isAuthenticatedUser) {
 
-						loginResponse = this.populateResponseDTO(session, user);
+						loginDTO = this.populateResponseDTO(session, user);
 						// TODO Fetch User Profile
 					} else {
-						loginResponse.setStatus(GlobalConstants.FAILURE);
-						loginResponse.setMessage(LoginConstants.loginFailed);
+						loginDTO.setStatus(GlobalConstants.FAILURE);
+						loginDTO.setMessage(LoginConstants.loginFailed);
 					}
 
 				} else {
 					try {
-						loginResponse.setStatus(GlobalConstants.FAILURE);
-						loginResponse.setMessage(LoginConstants.loginFailed);
+						loginDTO.setStatus(GlobalConstants.FAILURE);
+						loginDTO.setMessage(LoginConstants.loginFailed);
 
 					} catch (Exception e) {
 						logger.error(e.getMessage(), e);
 						throw e;
 					}
-					loginResponse.setStatus(GlobalConstants.FAILURE);
-					loginResponse.setMessage(LoginConstants.loginFailed);
+					loginDTO.setStatus(GlobalConstants.FAILURE);
+					loginDTO.setMessage(LoginConstants.loginFailed);
 
 				}
 				session.getTransaction().commit();
@@ -105,7 +97,7 @@ public class LoginDAO {
 				throw e;
 			}
 		}
-		return loginResponse;
+		return loginDTO;
 
 	}
 
@@ -137,26 +129,26 @@ public class LoginDAO {
 		return encryptedPassword;
 	}
 
-	private LoginResponseDTO populateResponseDTO(Session session,
+	private LoginDTO populateResponseDTO(Session session,
 			FamedenUser user) {
-		LoginResponseDTO responseDTO = new LoginResponseDTO();
+		LoginDTO loginDTO = new LoginDTO();
 		FamedenUserInfo userInfo = new FamedenUserInfo();
 		userInfo = (FamedenUserInfo) session.get(FamedenUserInfo.class,
 				user.getFamdenExternalUserId());
 
-		responseDTO.setUserName(userInfo.getFullName());
-		responseDTO.setStatus(GlobalConstants.SUCCESS);
+		//loginDTO.setUserID(userInfo.get);(userInfo.getFullName());
+		loginDTO.setStatus(GlobalConstants.SUCCESS);
 
-		return responseDTO;
+		return loginDTO;
 	}
 
-	private boolean authenticateUser(LoginRequestDTO loginDTO)
+	private boolean authenticateUser(LoginDTO loginDTO)
 			throws NoSuchAlgorithmException, InvalidKeySpecException {
 
 		boolean isLoginSuccessful = false;
 
 		try {
-			if (!RSAEncryptionKeyGeneration.areKeysPresent()) {
+/*			if (!RSAEncryptionKeyGeneration.areKeysPresent()) {
 				RSAEncryptionKeyGeneration.generateKey();
 			}
 
@@ -177,7 +169,7 @@ public class LoginDAO {
 			String saltEncryptedPassword = ste.createHash(userPassword);
 			isLoginSuccessful = ste.validatePassword("ravjot2.8",
 					saltEncryptedPassword);
-
+*/
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
