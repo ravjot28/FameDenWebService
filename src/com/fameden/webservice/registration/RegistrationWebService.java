@@ -1,4 +1,4 @@
-package com.fameden.webservice;
+package com.fameden.webservice.registration;
 
 import javax.jws.WebService;
 
@@ -8,9 +8,9 @@ import com.fameden.model.FamedenRegistrationRequest;
 import com.fameden.model.FamedenRegistrationResponse;
 import com.fameden.service.RegistrationService;
 import com.fameden.webservice.contracts.ICommon;
-import com.fameden.webservice.contracts.IRegistrationWS;
+import com.fameden.webservice.contracts.registration.IRegistrationWS;
 
-@WebService(endpointInterface = "com.fameden.webservice.contracts.IRegistrationWS", serviceName = "registrationService", portName = "RegistrationPort")
+@WebService(endpointInterface = "com.fameden.webservice.contracts.registration.IRegistrationWS", serviceName = "registrationService", portName = "RegistrationPort")
 public class RegistrationWebService implements IRegistrationWS, ICommon {
 
 	@Override

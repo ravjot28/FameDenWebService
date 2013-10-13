@@ -1,4 +1,4 @@
-package com.fameden.webservice.contracts;
+package com.fameden.webservice.contracts.registration;
 
 import javax.jws.WebMethod;
 import javax.jws.WebParam;
