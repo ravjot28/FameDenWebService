@@ -171,29 +171,7 @@ public class LoginDAO {
 
 			isPasswordCorrect = ste.validatePassword(password,
 					encryptedPasswordFromDB);
-			
-/*			if (!RSAEncryptionKeyGeneration.areKeysPresent()) {
-				RSAEncryptionKeyGeneration.generateKey();
-			}
 
-			final String rsaEncryptedPassword = loginDTO.getPassword();
-			ObjectInputStream inputStream = null;
-			inputStream = new ObjectInputStream(new FileInputStream(
-					RSAEncryptionKeyGeneration.PUBLIC_KEY_FILE));
-			final PublicKey publicKey = (PublicKey) inputStream.readObject();
-			final byte[] cipherText = RSAEncryptionKeyGeneration.encrypt(
-					rsaEncryptedPassword, publicKey);
-			inputStream = new ObjectInputStream(new FileInputStream(
-					RSAEncryptionKeyGeneration.PRIVATE_KEY_FILE));
-			final PrivateKey privateKey = (PrivateKey) inputStream.readObject();
-			final String userPassword = RSAEncryptionKeyGeneration.decrypt(
-					cipherText, privateKey);
-
-			SaltTextEncryption ste = new SaltTextEncryption();
-			String saltEncryptedPassword = ste.createHash(userPassword);
-			isLoginSuccessful = ste.validatePassword("ravjot2.8",
-					saltEncryptedPassword);
-*/
 			if (isUserActive&& isLoginModeCorrect && isPasswordCorrect) {
 				isLoginSuccessful = true;
 			}

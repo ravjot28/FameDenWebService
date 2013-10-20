@@ -4,19 +4,15 @@ import javax.jws.WebService;
 
 import com.fameden.constants.GlobalConstants;
 import com.fameden.dto.LoginDTO;
-import com.fameden.dto.LoginRequestDTO;
 import com.fameden.model.FamedenLoginRequest;
 import com.fameden.model.FamedenLoginResponse;
 import com.fameden.service.LoginService;
 import com.fameden.webservice.contracts.ICommon;
 import com.fameden.webservice.contracts.login.ILoginWS;
 
-@WebService(endpointInterface = "com.fameden.webservice.contracts.ILoginWS", serviceName = "LoginService", portName = "LoginPort")
+@WebService(endpointInterface = "com.fameden.webservice.contracts.login.ILoginWS", serviceName = "LoginService", portName = "LoginPort")
 public class LoginWebservice implements ILoginWS, ICommon {
 
-	public void LoginWebservice() {
-		
-	}
 	@Override
 	public FamedenLoginResponse login(FamedenLoginRequest loginRequestModel) {
 

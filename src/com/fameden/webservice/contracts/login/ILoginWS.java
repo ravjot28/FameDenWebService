@@ -9,7 +9,7 @@ import com.fameden.model.FamedenLoginRequest;
 import com.fameden.model.FamedenLoginResponse;
 
 
-@WebService(name = "LoginServiceContract", targetNamespace = "http://www.fameden.com/")
+@WebService(name = "LoginService")
 public interface ILoginWS {
 
 	/**
@@ -23,7 +23,5 @@ public interface ILoginWS {
     @WebMethod(operationName = "LoginAndGetUserProfile")
     @WebResult(name = "LoginResponse")
     public FamedenLoginResponse login(@WebParam(name="LoginRequest")FamedenLoginRequest loginRequest);
-	
-    
 	
 }
